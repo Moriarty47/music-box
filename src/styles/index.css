@@ -1,0 +1,24 @@
+audio {
+  width: 450px;
+  margin: 30px 0;
+}
+
+.container {
+  height: 420px;
+  overflow: hidden;
+}
+
+.container ul {
+  transition: transform 0.2s;
+}
+
+.container li {
+  height: 30px;
+  line-height: 30px;
+  transition: transform 0.2s;
+}
+
+.container li.active {
+  color: #fff;
+  transform: scale(1.2);
+}
