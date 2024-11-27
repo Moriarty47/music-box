@@ -1,7 +1,13 @@
-import { $ } from 'virtual:$global';
-import { Play2PauseAnimation } from '@/animation';
+import '@/play-progress';
+import { Info } from '@/info';
+import { Lyrics } from '@/lyrics';
+import { Volume } from '@/volume';
 import { MusicBox } from '@/music-box';
 import { PlayMode } from '@/play-mode';
+import { IKeyboard } from '@/keyboard-manager';
+import { Play2PauseAnimation } from '@/animation';
+import { $, debounce, $storageSet } from '@/utils';
+import type { PlayProgress } from '@/play-progress';
 
 type MethodName = {
   [K in keyof Controls]:
@@ -22,26 +28,36 @@ enum PLAY_STATE {
 }
 
 export class Controls {
-  index: number;
+  index: number = 0;
   listLength: number;
   /** paused manually state */
   playState: PLAY_STATE = PLAY_STATE.PAUSED;
   audio: HTMLAudioElement;
-  controls: HTMLDivElement;
-  musicBox: InstanceType<typeof MusicBox>;
-  playMode: InstanceType<typeof PlayMode>;
-  play2PauseAnimation: InstanceType<typeof Play2PauseAnimation>;
+  info: Info;
+  musicBox: MusicBox;
+  keyboard: IKeyboard;
+  volume: Volume;
+  progressBar: PlayProgress;
+  controls = $<HTMLDivElement>('.controls-wrapper')!;
+  playMode = new PlayMode();
+  play2PauseAnimation = new Play2PauseAnimation($('#play-path')!);
+  lyrics = new Lyrics();
+  #saveVolume: (volume: number) => void;
 
-  constructor(musicBox: InstanceType<typeof MusicBox>) {
+  constructor(musicBox: MusicBox) {
     this.musicBox = musicBox;
     this.audio = musicBox.audio;
-    this.index = 0;
     this.listLength = this.musicBox.list.length;
-    this.controls = $('.controls-wrapper')!;
-    this.play2PauseAnimation = new Play2PauseAnimation($('#play-path')!);
+    this.info = new Info(musicBox);
+    this.progressBar = $<PlayProgress>('#song-progress')!.init(musicBox);
+    this.keyboard = new IKeyboard(this);
+    this.volume = new Volume(this);
 
-    this.playMode = new PlayMode();
     this.canPlay = this.canPlay.bind(this);
+
+    this.#saveVolume = debounce((volume: number) => {
+      $storageSet('volume', String(volume));
+    }, 500);
 
     this.initListener();
   }
@@ -49,27 +65,30 @@ export class Controls {
   initListener() {
     this.initAudioListener();
     this.initButtonListener();
-
   }
 
   initAudioListener() {
-    const { info, progress } = this.musicBox;
 
     const updateHandler = () => {
-      if (progress.isSeeking) return;
-      info.setCurrentTime(this.audio.currentTime);
-      progress.updateProgress();
+      if (this.progressBar.isSeeking) return;
+      this.info.setCurrentTime(this.audio.currentTime);
+      this.progressBar.updateProgress();
+      this.lyrics.highlightLine(this.audio.currentTime);
     };
 
-    this.audio.addEventListener('loadedmetadata', () => {
+    const loadMetadataHandler = () => {
       this.audio.addEventListener('timeupdate', updateHandler);
-      info.setDuration(this.audio.duration);
-      progress.updateProgress();
-    });
-    this.audio.addEventListener('ended', () => {
+      this.info.setDuration(this.audio.duration);
+      this.progressBar.updateProgress();
+    };
+
+    const endedHandler = () => {
       this.audio.removeEventListener('timeupdate', updateHandler);
       this.action_NEXT();
-    });
+    };
+
+    this.audio.addEventListener('loadedmetadata', loadMetadataHandler, false);
+    this.audio.addEventListener('ended', endedHandler, false);
   }
 
   initButtonListener() {
@@ -102,7 +121,10 @@ export class Controls {
         this.audio.currentTime = 0;
       } else {
         this.audio.src = src;
-        this.musicBox.info.updateInfo();
+        this.info.updateInfo();
+        if (this.lyrics.visible) {
+          this.lyrics.display(this.info.currentInfo.lrc);
+        }
       }
       this.audio.removeEventListener('canplay', this.canPlay);
       this.audio.addEventListener('canplay', this.canPlay);
@@ -145,8 +167,35 @@ export class Controls {
     this.changeMusic(this.index);
   }
 
-  action_LYRICS() {
-    console.log('LYRICS');
+  action_MUTED() {
+    this.audio.muted = !this.audio.muted;
+  }
+
+  setVolume(volume: number) {
+    this.audio.volume = volume;
+    this.#saveVolume(volume);
+  }
+
+  action_VOLUME_UP() {
+    const volume = (this.audio.volume * 100 + 10) / 100;
+    if (volume > 1) this.setVolume(1);
+    else this.setVolume(volume);
+  }
+
+  action_VOLUME_DOWN() {
+    const volume = (this.audio.volume * 100 - 10) / 100;
+    if (volume < 0) this.setVolume(0);
+    else this.setVolume(volume);
+  }
+
+  async action_LYRICS() {
+    const musicBox = $('.music-box')!;
+    musicBox.classList.toggle('open-lyrics');
+
+    this.lyrics.visible = !this.lyrics.visible;
+
+    await this.lyrics.display(this.info.currentInfo.lrc);
+    this.lyrics.highlightLine(this.audio.currentTime);
   }
 
   isPaused() {

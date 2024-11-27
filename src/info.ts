@@ -1,4 +1,4 @@
-import { $ } from 'virtual:$global';
+import { $ } from '@/utils';
 import { MusicBox } from '@/music-box';
 
 export type InfoType = {
@@ -11,23 +11,23 @@ export type InfoType = {
 };
 
 export class Info {
-  musicBox: InstanceType<typeof MusicBox>;
+  musicBox: MusicBox;
   audio: HTMLAudioElement;
-  cover: HTMLImageElement;
-  currentTime: HTMLElement;
-  duration: HTMLElement;
+  cover = $<HTMLImageElement>('#cover')!;
+  currentTime = $('.current-time')!;
+  duration = $('.duration')!;
+  currentInfo: InfoType = {} as InfoType;
 
-  constructor(musicBox: InstanceType<typeof MusicBox>) {
+  constructor(musicBox: MusicBox) {
     this.musicBox = musicBox;
     this.audio = musicBox.audio;
-    this.cover = $<HTMLImageElement>('#cover')!;
-    this.currentTime = $('.current-time')!;
-    this.duration = $('.duration')!;
   }
 
   updateInfo() {
     this.reset();
-    this.setInfo(this.musicBox.list[this.musicBox.controls.index]);
+
+    this.currentInfo = this.musicBox.list[this.musicBox.controls.index];
+    this.setInfo(this.currentInfo);
   }
 
   setInfo(info: InfoType) {
@@ -40,6 +40,9 @@ export class Info {
     this.cover.src = info.cover;
     this.cover.onload = () => {
       this.cover.classList.add('loaded');
+    };
+    this.cover.onerror = () => {
+      this.cover.src = './images/unknown.bmp';
     };
     artist && (artist.textContent = info.artist);
     album && (album.textContent = info.album);

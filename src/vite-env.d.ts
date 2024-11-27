@@ -8,7 +8,3 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
-
-declare module 'virtual:$global' {
-  export function $<T extends HTMLElement>(selectors: string, parent?: Document | HTMLElement | T): T | null;
-}

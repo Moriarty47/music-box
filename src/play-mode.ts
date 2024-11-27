@@ -1,4 +1,4 @@
-import { $ } from 'virtual:$global';
+import { $, $storageGet, $storageSet } from '@/utils';
 import { PlayModeAnimation } from '@/animation';
 
 export enum PLAY_MODE {
@@ -11,13 +11,11 @@ const MODE_KEY = 'play_mode';
 const MODE_LENGTH = Object.keys(PLAY_MODE).filter((key) => isNaN(Number(key))).length;
 
 export class PlayMode {
-  mode: PLAY_MODE;
-  animation: InstanceType<typeof PlayModeAnimation>;
+  mode: PLAY_MODE = PLAY_MODE.ORDER;
+  animation = new PlayModeAnimation($('#repeat-path')!);
 
   constructor() {
-    this.mode = PLAY_MODE.ORDER;
     this.setPlayMode(PLAY_MODE[this.mode]);
-    this.animation = new PlayModeAnimation($('#repeat-path')!);
   }
 
   getIndex(type: 'PREV' | 'NEXT', index: number, listLength: number) {
@@ -34,7 +32,7 @@ export class PlayMode {
   }
 
   getPlayMode() {
-    return Number(localStorage.getItem(MODE_KEY)) || PLAY_MODE.ORDER;
+    return Number($storageGet(MODE_KEY, PLAY_MODE.ORDER));
   }
 
   setPlayMode(...modes: string[]) {
@@ -48,7 +46,7 @@ export class PlayMode {
       ele.classList.remove(modes[0]);
       ele.classList.add(modes[1]);
     }
-    localStorage.setItem(MODE_KEY, String(this.mode));
+    $storageSet(MODE_KEY, String(this.mode));
   }
 
   switch() {

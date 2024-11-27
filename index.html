@@ -4,37 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link
-      rel="type"
+      rel="icon"
       href="https://blog.moriarty47.top/images/favtype-dark.ico"
     />
     <title>Lyrics</title>
   </head>
 
   <body class="flex h-screen w-screen text-center text-[#666]">
-    <!-- <div class="container">
-      <ul class="lrc-list"></ul>
-    </div> -->
-    <!-- <audio src="./assets/许嵩-庐州月.flac" controls></audio> -->
-    <!-- <script src="./js/index.js"></script> -->
     <div
-      class="wrapper m-auto my-2 flex w-[800px] items-center justify-center overflow-hidden rounded-lg px-2 py-4"
+      class="wrapper m-auto my-2 flex w-[800px] items-start justify-center overflow-hidden rounded-lg px-2 py-4"
     >
       <div
-        class="music-box bg-default/50 shadow-offset rounded-xxl relative flex h-auto max-w-[610px] flex-col items-center justify-center overflow-hidden text-foreground backdrop-blur-md backdrop-saturate-150 transition-[transform,background] duration-200"
+        class="music-box relative flex h-auto max-w-[610px] flex-col items-center justify-center overflow-hidden rounded-xxl bg-default/50 text-foreground shadow-offset backdrop-blur-md backdrop-saturate-150 transition-[transform,background] duration-200"
         tabindex="-1"
       >
         <div
-          class="relative flex h-auto w-full flex-auto flex-col overflow-y-auto break-words p-3 text-left"
+          class="relative flex h-auto w-full flex-auto flex-col overflow-hidden break-words p-3 text-left"
         >
           <div
             class="grid grid-cols-6 items-center justify-center gap-6 md:grid-cols-12 md:gap-4"
           >
             <div class="relative col-span-6 md:col-span-4">
-              <div class="rounded-xxl shadow-middle relative max-w-full">
+              <div class="relative max-w-full rounded-xxl shadow-middle">
                 <img
                   id="cover"
                   alt="Album cover"
-                  class="rounded-xxl shadow-middle relative z-10 block h-[200px] max-w-full object-cover opacity-0 transition-opacity duration-300 ease-in"
+                  class="relative z-10 block h-[200px] max-w-full rounded-xxl object-cover opacity-0 shadow-middle transition-opacity duration-300 ease-in"
                   width="100%"
                   height="200"
                 />
@@ -42,10 +37,14 @@
             </div>
             <div class="col-span-6 flex flex-col md:col-span-8">
               <div class="flex items-start justify-between">
-                <div class="info-wrapper flex flex-col">
+                <div
+                  class="info-wrapper flex flex-auto flex-col overflow-hidden"
+                >
                   <h3 class="text-xl font-semibold text-foreground/90"></h3>
                   <p class="text-sm text-foreground/90"></p>
-                  <h1 class="mt-2 text-xl font-medium text-foreground"></h1>
+                  <h1
+                    class="mt-2 w-auto max-w-[190px] overflow-hidden text-ellipsis whitespace-nowrap text-xl font-medium text-foreground md:max-w-full"
+                  ></h1>
                 </div>
                 <div
                   class="relative inline-flex items-center justify-center text-[red]"
@@ -68,37 +67,19 @@
               </div>
               <div class="flex flex-col gap-1" style="margin-top: 0.75rem">
                 <div class="progress-wrapper flex w-full flex-col gap-1">
-                  <div class="relative flex items-center gap-2">
-                    <div
-                      class="track bg-foreground-track/30 relative mx-0 my-2 flex h-1 w-full rounded-full border-transparent border-s-foreground"
-                    >
-                      <div
-                        class="filler absolute left-0 h-full w-full rounded-full bg-foreground"
-                        style="width: 0%"
-                      ></div>
-                      <div
-                        class="thumb shadow-offset pointer-events-none absolute top-1/2 flex h-2 w-2 -translate-x-1/2 -translate-y-1/2 touch-none items-center justify-center rounded-full border-0 bg-foreground"
-                        style="left: 0%"
-                      ></div>
-                    </div>
-                    <input
-                      id="progress"
-                      class="absolute -left-2 h-1 w-[calc(100%+1rem)] appearance-none bg-transparent opacity-0"
-                      tabindex="0"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      type="range"
-                      value="0"
-                    />
-                  </div>
+                  <play-progress id="song-progress"></play-progress>
+                  <audio
+                    id="music-audio"
+                    class="hidden"
+                    crossorigin="anonymous"
+                  ></audio>
                   <div class="flex select-none justify-between text-sm">
                     <p class="current-time">00:00</p>
                     <p class="duration text-foreground/50">00:00</p>
                   </div>
                 </div>
                 <div
-                  class="controls-wrapper flex w-full items-center justify-center"
+                  class="controls-wrapper relative flex w-full items-center justify-center"
                 >
                   <button class="ripple-button" data-type="PLAY_MODE">
                     <svg
@@ -188,10 +169,7 @@
                       ></path>
                     </svg>
                   </button>
-                  <button
-                    class="ripple-button"
-                    data-type="LYRICS"
-                  >
+                  <button class="ripple-button" data-type="LYRICS">
                     <svg
                       fill="none"
                       stroke="currentColor"
@@ -206,13 +184,87 @@
                       <path d="M18 6H6 M21 12H3 M18 18H6"></path>
                     </svg>
                   </button>
+                  <button class="ripple-button" data-type="MUTED">
+                    <svg
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      shape-rendering="geometricPrecision"
+                      viewBox="0 0 24 24"
+                      height="24"
+                      width="24"
+                    >
+                      <path class="vol-l" d="M11 5L6 9H2v6h4l5 4V5z"></path>
+                      <path
+                        class="vol-state vol-m"
+                        d="M15.54 8.46a5 5 0 010 7.07"
+                      ></path>
+                      <path
+                        class="vol-state vol-h"
+                        d="M19.07 4.93a10 10 0 010 14.14"
+                      ></path>
+                      <path
+                        class="vol-state vol-muted vol-muted1"
+                        d="M17 9l6 6"
+                      ></path>
+                      <path
+                        class="vol-state vol-muted vol-muted2"
+                        d="M23 9l-6 6"
+                      ></path>
+                    </svg>
+                  </button>
                 </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="lyrics-wrapper grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-in"
+          >
+            <div class="lyrics-list overflow-hidden">
+              <div class="h-[200px] pt-3">
+                <ul
+                  class="lrc-list flex flex-col items-center justify-center text-center transition-transform duration-300 ease-in"
+                ></ul>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <div
+      id="volume-tooltip"
+      class="fixed left-[calc(var(--left)+var(--l))] top-0 flex w-28 rounded-xxl bg-default/40 px-3 py-1 text-foreground shadow-offset backdrop-blur-md backdrop-saturate-150 transition-[transform,background] duration-200 [--left:-30px] md:[--left:0px]"
+    >
+      <progress-bar id="volume-progress"></progress-bar>
+    </div>
+
+    <template id="progress-bar-template">
+      <div
+        class="progress-bar-wrapper relative flex items-center gap-2 [container-type:inline-size]"
+      >
+        <div
+          class="track relative mx-0 my-2 flex h-1 w-full overflow-hidden rounded-full border-transparent border-s-foreground bg-foreground-track/30"
+        >
+          <div
+            class="filler absolute left-0 h-full w-full translate-x-[calc((100-var(--percent))*-1%)] rounded-full bg-foreground"
+          ></div>
+        </div>
+        <div
+          class="thumb pointer-events-none absolute -left-1 top-[calc(50%-.25rem)] flex h-2 w-2 translate-x-[calc(var(--percent)*1cqw)] touch-none items-center justify-center rounded-full border-0 bg-foreground shadow-offset"
+        ></div>
+        <input
+          class="progress absolute -left-2 h-1 w-[calc(100%+1rem)] appearance-none bg-transparent opacity-0"
+          tabindex="0"
+          min="0"
+          max="100"
+          step="0.1"
+          type="range"
+        />
+      </div>
+    </template>
 
     <script type="module" src="./main.ts"></script>
   </body>

@@ -1,11 +1,8 @@
+import fs from 'fs';
 import path from 'path';
 import { defineConfig } from 'vite';
-import { viteGlobalPlugin } from './vite.plugin.selector.mjs';
 
 export default defineConfig({
-  plugins: [
-    viteGlobalPlugin(),
-  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -17,5 +14,23 @@ export default defineConfig({
   build: {
     target: 'es2020',
     outDir: path.resolve(__dirname, 'dist'),
-  }
+  },
+  plugins: [
+    ((options) => ({
+      name: 'vite-static-fetch',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (['.bmp', '.lrc'].some(ext => req.url.endsWith(ext))) {
+            const ph = path.join(options?.rootDir ?? __dirname, 'public', decodeURIComponent(req.url));
+            if (!fs.existsSync(ph)) {
+              res.statusCode = 404;
+              res.end('No resource found.');
+              return;
+            }
+          }
+          next();
+        });
+      }
+    }))()
+  ]
 });
