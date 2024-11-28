@@ -1,12 +1,12 @@
 import '@/play-progress';
-import { Info } from '@/info';
+import { Info, InfoType } from '@/info';
 import { Lyrics } from '@/lyrics';
 import { Volume } from '@/volume';
 import { MusicBox } from '@/music-box';
 import { PlayMode } from '@/play-mode';
 import { IKeyboard } from '@/keyboard-manager';
 import { Play2PauseAnimation } from '@/animation';
-import { $, debounce, $storageSet } from '@/utils';
+import { $, debounce, getFilename, getTargetElement, getButtonElement, $storageSet, getFileRecursively, getMediaInfo, errorLogger } from '@/utils';
 import type { PlayProgress } from '@/play-progress';
 
 type MethodName = {
@@ -16,12 +16,6 @@ type MethodName = {
   : never
 }[keyof Controls];
 
-declare global {
-  interface HTMLAudioElement {
-    playing: boolean;
-  }
-}
-
 enum PLAY_STATE {
   PAUSED,
   PLAYING,
@@ -29,7 +23,6 @@ enum PLAY_STATE {
 
 export class Controls {
   index: number = 0;
-  listLength: number;
   /** paused manually state */
   playState: PLAY_STATE = PLAY_STATE.PAUSED;
   audio: HTMLAudioElement;
@@ -47,19 +40,23 @@ export class Controls {
   constructor(musicBox: MusicBox) {
     this.musicBox = musicBox;
     this.audio = musicBox.audio;
-    this.listLength = this.musicBox.list.length;
     this.info = new Info(musicBox);
     this.progressBar = $<PlayProgress>('#song-progress')!.init(musicBox);
     this.keyboard = new IKeyboard(this);
     this.volume = new Volume(this);
 
     this.canPlay = this.canPlay.bind(this);
+    this.handleListClick = this.handleListClick.bind(this);
 
     this.#saveVolume = debounce((volume: number) => {
       $storageSet('volume', String(volume));
     }, 500);
 
     this.initListener();
+  }
+
+  get listLength() {
+    return this.musicBox.list.length;
   }
 
   initListener() {
@@ -114,9 +111,39 @@ export class Controls {
     });
   }
 
-  changeMusic(index: number) {
+  async action_OPEN_DIR() {
+    if (!window.showDirectoryPicker) {
+      errorLogger('Not supported yet. Please use Chrome > 86 or Edge > 86 instead.');
+      return;
+    }
+    try {
+      const dirHandle = await window.showDirectoryPicker();
+      await this.addSongList(dirHandle);
+    } catch { }
+  }
+
+  async changeMusic() {
+    if (this.audio.src.startsWith('blob://')) {
+      URL.revokeObjectURL(this.audio.src);
+    }
+
+    const item = this.musicBox.list[this.index];
+    const file = item.file;
+
+    if (file) {
+      item.src = URL.createObjectURL(file);
+      const { tags = {} } = await getMediaInfo(file) || {};
+      this.musicBox.list[this.index] = {
+        ...item,
+        title: tags.title || item.title,
+        album: tags.album || item.album,
+        cover: tags.picture || item.cover,
+        artist: tags.artist || item.artist,
+      } as InfoType;
+    }
+
     setTimeout(() => {
-      const src = this.musicBox.list[index].src;
+      const src = item.src;
       if (src === this.audio.src) {
         this.audio.currentTime = 0;
       } else {
@@ -158,13 +185,13 @@ export class Controls {
   action_PREVIOUS() {
     this.audio.pause();
     this.index = this.playMode.getIndex('PREV', this.index, this.listLength);
-    this.changeMusic(this.index);
+    this.changeMusic();
   }
 
   action_NEXT() {
     this.audio.pause();
     this.index = this.playMode.getIndex('NEXT', this.index, this.listLength);
-    this.changeMusic(this.index);
+    this.changeMusic();
   }
 
   action_MUTED() {
@@ -202,6 +229,37 @@ export class Controls {
     return this.playState === PLAY_STATE.PAUSED;
   }
 
+  async addSongList(dirHandle: FileSystemDirectoryHandle) {
+    const list = this.musicBox.list;
+    const listWrapper = $<HTMLDivElement>('.list-wrapper')!;
+    listWrapper.classList.add('list');
+
+    const listUl = listWrapper.querySelector('ul')!;
+    const listFrags = document.createDocumentFragment();
+    let i = list.length;
+    for await (const file of getFileRecursively(dirHandle)) {
+      const li = document.createElement('li');
+      li.textContent = getFilename(file);
+      li.dataset.index = `${i++}`;
+      listFrags.appendChild(li);
+      list.push({ title: getFilename(file), file } as InfoType);
+    }
+    listUl.appendChild(listFrags);
+
+    listUl.addEventListener('pointerdown', this.handleListClick);
+  }
+
+  handleListClick(e: PointerEvent) {
+    const ele = getTargetElement<HTMLLIElement>(e, 'LI');
+    if (!ele) return;
+
+    let index = ele.dataset.index;
+    if (index === undefined || index === null) return;
+    this.index = Number(index);
+
+    this.changeMusic();
+  }
+
   addRipple(e: PointerEvent, btn: HTMLButtonElement) {
     const { clientX, clientY } = e;
     const rect = btn.getBoundingClientRect();
@@ -219,11 +277,4 @@ export class Controls {
       ripple.remove();
     }, 400);
   }
-}
-
-function getButtonElement(e: PointerEvent): [string, HTMLButtonElement] | [null, null] {
-  const button = e.target as HTMLButtonElement;
-  if (button?.tagName !== 'BUTTON') return [null, null];
-  const type = button.dataset.type as string;
-  return [type, button];
 }

@@ -92,6 +92,7 @@ async function parseLyrics(url: string): Promise<LyricLineItem[]> {
 
 async function fetchLyrics(url: string) {
   try {
+    if (!url) throw 'No lyrics found.';
     const response = await fetch(url, {
       headers: { 'Content-type': 'text/plain' }
     });

@@ -21,6 +21,23 @@ export function getAttribute(ele: HTMLElement, key: string): string | boolean {
   return value;
 }
 
+export function getTargetElement<T extends HTMLElement>(e: PointerEvent, tagName: string): T | null {
+  const ele = e.target as T;
+  if (ele?.tagName !== tagName) return null;
+  return ele;
+}
+
+export function getButtonElement(e: PointerEvent): [string, HTMLButtonElement] | [null, null] {
+  const button = getTargetElement<HTMLButtonElement>(e, 'BUTTON');
+  if (!button) return [null, null];
+  const type = button.dataset.type as string;
+  return [type, button];
+}
+
+export function getFilename(file: File) {
+  return file.name.replace(/\.\w+$/, '');
+}
+
 export function mapRange(s: number, smin: number, smax: number, tmin: number, tmax: number): number {
   if (smin === smax) {
     throw new Error("Invalid range: [a, b] cannot have a zero length.");
@@ -36,4 +53,32 @@ export function debounce<T>(func: (...args: T[]) => void, delay: number) {
       func(...args);
     }, delay);
   };
+}
+
+export async function* getFileRecursively<T extends FileSystemDirectoryHandle | FileSystemFileHandle>(entry: T): FileSystemDirectoryHandleAysncIterator<File> {
+  if (entry.kind === 'file') {
+    const file = await entry.getFile();
+    if (file !== null) {
+      yield file;
+    }
+  } else if (entry.kind === 'directory') {
+    for await (const handle of entry.values()) {
+      yield* getFileRecursively(handle as T);
+    }
+  }
+}
+
+export async function getMediaInfo(file: File | Blob) {
+  if (!window.jsmediatags) {
+    throw new Error('Not found jsmediatags');
+  }
+  return new Promise<JSMEDIA_TAG>((resolve) => {
+    window.jsmediatags.read(file, {
+      onSuccess: resolve,
+      onError(error) {
+        errorLogger(error);
+        resolve({ tags: {} } as JSMEDIA_TAG);
+      },
+    });
+  });
 }

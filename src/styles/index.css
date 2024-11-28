@@ -21,7 +21,7 @@
   .grabbing #progress::-ms-thumb {
     @apply !cursor-grabbing;
   }
-  
+
   .progress-bar .progress::-webkit-slider-thumb {
     @apply !h-4 !w-4 !cursor-grab !appearance-none !rounded-full;
   }
@@ -41,9 +41,25 @@
     @apply !cursor-grabbing;
   }
 }
-
+@property --start-color {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #ffb457;
+}
+@property --end-color {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #ff705b;
+}
 body {
-  background-image: linear-gradient(to top right, #ffb457, #ff705b);
+  background-image: linear-gradient(
+    to top right,
+    var(--start-color),
+    var(--end-color)
+  );
+  transition:
+    --start-color 0.3s ease,
+    --end-color 0.3s ease;
 }
 .abs-hidden {
   position: absolute;
@@ -67,14 +83,40 @@ body {
   --middle-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.06),
     0px 2px 30px 0px rgba(0, 0, 0, 0.22),
     inset 0px 0px 1px 0px hsla(0, 0%, 100%, 0.15);
+  scroll-behavior: smooth;
 }
 ::selection {
   background-color: rgba(0, 255, 255, 0.233);
 }
-#cover.loaded {
-  opacity: 1;
+@supports (scrollbar-width: auto) {
+  .song-list {
+    scrollbar-width: thin;
+    scroll-behavior: smooth;
+    scrollbar-color: hsl(var(--foreground-track) / 0.6) transparent;
+    scrollbar-gutter: auto;
+  }
 }
-
+@supports selector(::-webkit-scrollbar) {
+  .song-list::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+    background: transparent;
+  }
+  .song-list::-webkit-scrollbar-thumb {
+    background: hsl(var(--foreground-track) / 0.6);
+  }
+  .song-list::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+.song-list li {
+  cursor: pointer;
+  transition: color 0.3s ease;
+  color: #bbb;
+  &:hover {
+    color: var(--second-color, #00ff51);
+  }
+}
 .ripple-button {
   @apply relative z-0 inline-flex size-10 min-w-10 items-center justify-center overflow-hidden rounded-full border-0 bg-transparent text-sm font-normal text-white;
   transition-property: transform, color, background, background-color,
@@ -241,7 +283,7 @@ body {
   color: white;
   cursor: default;
   &.active {
-    color: #00ff51;
+    color: var(--second-color, #00ff51);
     transform: scale(1.2);
   }
 }

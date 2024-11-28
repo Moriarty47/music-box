@@ -27,6 +27,7 @@ export class MusicBox {
   }
 
   init() {
-    this.controls.changeMusic(0);
+    this.controls.index = 0;
+    this.controls.changeMusic();
   }
 }

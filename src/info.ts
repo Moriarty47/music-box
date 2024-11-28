@@ -1,5 +1,6 @@
 import { $ } from '@/utils';
 import { MusicBox } from '@/music-box';
+import ColorPalette from '@/color-palette';
 
 export type InfoType = {
   title: string;
@@ -8,6 +9,7 @@ export type InfoType = {
   src: string;
   cover: string;
   lrc: string;
+  file?: File;
 };
 
 export class Info {
@@ -17,6 +19,7 @@ export class Info {
   currentTime = $('.current-time')!;
   duration = $('.duration')!;
   currentInfo: InfoType = {} as InfoType;
+  colorPalette = new ColorPalette();
 
   constructor(musicBox: MusicBox) {
     this.musicBox = musicBox;
@@ -40,6 +43,7 @@ export class Info {
     this.cover.src = info.cover;
     this.cover.onload = () => {
       this.cover.classList.add('loaded');
+      this.getColorsFromImage(this.cover);
     };
     this.cover.onerror = () => {
       this.cover.src = './images/unknown.bmp';
@@ -66,6 +70,20 @@ export class Info {
     this.cover.classList.remove('loaded');
     this.currentTime.textContent = '00:00';
     this.duration.textContent = '00:00';
+  }
+
+  getColorsFromImage(image: HTMLImageElement) {
+    const mainColor = this.colorPalette.getColor(image);
+    const palette = this.colorPalette.getPalette(image, 3);
+    const body = $<HTMLBodyElement>('body')!;
+    if (mainColor) {
+      const [r, g, b] = mainColor;
+      body.style.setProperty('--start-color', `rgb(${r},${g},${b})`);
+    }
+    if (palette?.length) {
+      const [r, g, b] = palette[0];
+      body.style.setProperty('--end-color', `rgb(${r},${g},${b})`);
+    }
   }
 }
 
