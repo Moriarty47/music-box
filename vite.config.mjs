@@ -12,6 +12,7 @@ export default defineConfig({
   server: {
     port: 5500,
   },
+  base: '/music_box/',
   build: {
     target: 'es2020',
     outDir: path.resolve(__dirname, 'dist'),
