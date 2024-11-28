@@ -6,7 +6,7 @@ import { MusicBox } from '@/music-box';
 import { PlayMode } from '@/play-mode';
 import { IKeyboard } from '@/keyboard-manager';
 import { Play2PauseAnimation } from '@/animation';
-import { $, debounce, getFilename, getTargetElement, getButtonElement, $storageSet, getFileRecursively, getMediaInfo, errorLogger } from '@/utils';
+import { $, debounce, getFilename, getTargetElement, getButtonElement, $storageSet, getFileRecursively, getMediaInfo, errorLogger, isAudioType, normalizeFile, cleanupBlobUrl } from '@/utils';
 import type { PlayProgress } from '@/play-progress';
 
 type MethodName = {
@@ -57,6 +57,14 @@ export class Controls {
 
   get listLength() {
     return this.musicBox.list.length;
+  }
+
+  isPlayState(state: PLAY_STATE) {
+    return this.playState === state;
+  }
+
+  setPlayState(state: PLAY_STATE) {
+    this.playState = state;
   }
 
   initListener() {
@@ -123,9 +131,7 @@ export class Controls {
   }
 
   async changeMusic() {
-    if (this.audio.src.startsWith('blob://')) {
-      URL.revokeObjectURL(this.audio.src);
-    }
+    cleanupBlobUrl(this.audio, this.info.currentInfo);
 
     const item = this.musicBox.list[this.index];
     const file = item.file;
@@ -150,6 +156,7 @@ export class Controls {
         this.audio.src = src;
         this.info.updateInfo();
         if (this.lyrics.visible) {
+          this.info.currentInfo.lrc = normalizeFile(this.info.currentInfo, 'lrc');
           this.lyrics.display(this.info.currentInfo.lrc);
         }
       }
@@ -167,7 +174,7 @@ export class Controls {
   }
 
   action_PLAY() {
-    this.playState = this.isPaused() ? PLAY_STATE.PLAYING : PLAY_STATE.PAUSED;
+    this.setPlayState(this.isPaused() ? PLAY_STATE.PLAYING : PLAY_STATE.PAUSED);
     this.play2PauseAnimation.switch();
     this.play();
   }
@@ -179,7 +186,11 @@ export class Controls {
   }
 
   play() {
-    this.audio.paused ? this.audio.play() : this.audio.pause();
+    this.audio.paused
+      ? this.audio.play().catch(error => {
+        errorLogger(error);
+      })
+      : this.audio.pause();
   }
 
   action_PREVIOUS() {
@@ -221,12 +232,12 @@ export class Controls {
 
     this.lyrics.visible = !this.lyrics.visible;
 
-    await this.lyrics.display(this.info.currentInfo.lrc);
+    await this.lyrics.display(normalizeFile(this.info.currentInfo, 'lrc'));
     this.lyrics.highlightLine(this.audio.currentTime);
   }
 
   isPaused() {
-    return this.playState === PLAY_STATE.PAUSED;
+    return this.isPlayState(PLAY_STATE.PAUSED);
   }
 
   async addSongList(dirHandle: FileSystemDirectoryHandle) {
@@ -237,14 +248,22 @@ export class Controls {
     const listUl = listWrapper.querySelector('ul')!;
     const listFrags = document.createDocumentFragment();
     let i = list.length;
+    const extraFiles = [];
     for await (const file of getFileRecursively(dirHandle)) {
+      if (!isAudioType(file)) {
+        extraFiles.push(file);
+        continue;
+      }
       const li = document.createElement('li');
-      li.textContent = getFilename(file);
+      const filename = getFilename(file);
+      li.textContent = filename.name;
       li.dataset.index = `${i++}`;
       listFrags.appendChild(li);
-      list.push({ title: getFilename(file), file } as InfoType);
+      list.push({ title: filename.name, file } as InfoType);
     }
-    listUl.appendChild(listFrags);
+    this.addExtraInfo(extraFiles);
+
+    listUl.replaceChildren(listFrags);
 
     listUl.addEventListener('pointerdown', this.handleListClick);
   }
@@ -258,6 +277,20 @@ export class Controls {
     this.index = Number(index);
 
     this.changeMusic();
+  }
+
+  addExtraInfo(extraFiles: File[]) {
+    extraFiles.forEach(file => {
+      const filename = getFilename(file);
+      const songItem = this.musicBox.list.find(item => item.title === filename.name);
+      if (!songItem) return;
+
+      if (filename.ext === 'lrc' || filename.ext === 'txt') {
+        songItem.lrcObject = file;
+      } else {
+        songItem.coverObject = file;
+      }
+    });
   }
 
   addRipple(e: PointerEvent, btn: HTMLButtonElement) {

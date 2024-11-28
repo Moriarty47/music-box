@@ -1,3 +1,5 @@
+import { InfoType } from './info';
+
 export function $<T extends HTMLElement>(selectors: string, parent: Document | HTMLElement | T = document): T | null {
   return parent.querySelector(selectors);
 }
@@ -34,8 +36,17 @@ export function getButtonElement(e: PointerEvent): [string, HTMLButtonElement] |
   return [type, button];
 }
 
+export function isAudioType(file: File) {
+  return file.type.startsWith('audio/');
+}
+
 export function getFilename(file: File) {
-  return file.name.replace(/\.\w+$/, '');
+  let ext: string = '';
+  const name = file.name.replace(/\.(\w+)$/, (_, $0) => {
+    ext = $0;
+    return '';
+  });
+  return { name, ext };
 }
 
 export function mapRange(s: number, smin: number, smax: number, tmin: number, tmax: number): number {
@@ -80,5 +91,23 @@ export async function getMediaInfo(file: File | Blob) {
         resolve({ tags: {} } as JSMEDIA_TAG);
       },
     });
+  });
+}
+
+export function normalizeFile(info: InfoType, type: 'lrc' | 'cover') {
+  if (type === 'lrc' && typeof info.lrcObject === 'object') {
+    return info.lrc = URL.createObjectURL(info.lrcObject);
+  }
+  if (type === 'cover' && typeof info.coverObject === 'object') {
+    return info.cover = URL.createObjectURL(info.coverObject);
+  }
+  return info[type];
+}
+
+export function cleanupBlobUrl(audio: HTMLAudioElement, info: InfoType) {
+  [audio.src, info.lrc, info.cover].forEach(url => {
+    if (url && url.startsWith('blob://')) {
+      URL.revokeObjectURL(url);
+    }
   });
 }

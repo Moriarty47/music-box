@@ -1,4 +1,4 @@
-import { $ } from '@/utils';
+import { $, normalizeFile } from '@/utils';
 import { MusicBox } from '@/music-box';
 import ColorPalette from '@/color-palette';
 
@@ -9,6 +9,8 @@ export type InfoType = {
   src: string;
   cover: string;
   lrc: string;
+  coverObject?: File;
+  lrcObject?: File;
   file?: File;
 };
 
@@ -34,20 +36,21 @@ export class Info {
   }
 
   setInfo(info: InfoType) {
-    const infoWrapper = $('.info-wrapper')!;
-
-    const artist = $('h3', infoWrapper);
-    const album = $('p', infoWrapper);
-    const title = $('h1', infoWrapper);
-
-    this.cover.src = info.cover;
+    const defaultSrc = './images/unknown.bmp';
+    this.cover.src = normalizeFile(info, 'cover') || defaultSrc;
     this.cover.onload = () => {
       this.cover.classList.add('loaded');
       this.getColorsFromImage(this.cover);
     };
     this.cover.onerror = () => {
-      this.cover.src = './images/unknown.bmp';
+      this.cover.src = defaultSrc;
     };
+
+    const infoWrapper = $('.info-wrapper')!;
+    const artist = $('h3', infoWrapper);
+    const album = $('p', infoWrapper);
+    const title = $('h1', infoWrapper);
+
     artist && (artist.textContent = info.artist);
     album && (album.textContent = info.album);
     title && (title.textContent = info.title);
