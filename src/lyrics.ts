@@ -92,7 +92,7 @@ async function parseLyrics(url: string): Promise<LyricLineItem[]> {
 
 async function fetchLyrics(url: string) {
   try {
-    if (!url) throw 'No lyrics found.';
+    if (!url) throw new Error('No lyrics found.');
     const response = await fetch(url, {
       headers: { 'Content-type': 'text/plain' }
     });
@@ -100,8 +100,8 @@ async function fetchLyrics(url: string) {
       return response.text();
     }
     throw await response.text();
-  } catch (error) {
-    errorLogger(error);
+  } catch (error: any) {
+    errorLogger(error.message || error);
     return '暂无歌词';
   }
 }

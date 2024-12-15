@@ -6,7 +6,7 @@ import { MusicBox } from '@/music-box';
 import { PlayMode } from '@/play-mode';
 import { IKeyboard } from '@/keyboard-manager';
 import { Play2PauseAnimation } from '@/animation';
-import { $, debounce, getFilename, getTargetElement, getButtonElement, $storageSet, getFileRecursively, getMediaInfo, errorLogger, isAudioType, normalizeFile, cleanupBlobUrl } from '@/utils';
+import { $, debounce, getFilename, getTargetElement, getButtonElement, $storageSet, getFileRecursively, getMediaInfo, errorLogger, isAudioType, normalizeFile, cleanupBlobUrl, deferred } from '@/utils';
 import type { PlayProgress } from '@/play-progress';
 
 type MethodName = {
@@ -148,58 +148,65 @@ export class Controls {
       } as InfoType;
     }
 
+    const dfd = deferred();
+
     setTimeout(() => {
       const src = item.src;
       if (src === this.audio.src) {
         this.audio.currentTime = 0;
       } else {
-        this.audio.src = src;
+        this.audio.src = src || '';
         this.info.updateInfo();
         if (this.lyrics.visible) {
           this.info.currentInfo.lrc = normalizeFile(this.info.currentInfo, 'lrc');
           this.lyrics.display(this.info.currentInfo.lrc);
         }
       }
-      this.audio.removeEventListener('canplay', this.canPlay);
-      this.audio.addEventListener('canplay', this.canPlay);
+      this.audio.addEventListener('canplay', () => {
+        dfd.resolve(this.audio);
+        this.action_PLAY();
+      }, { once: true });
     }, 150);
+
+    return dfd.promise;
   }
 
+  /** check if paused manually */
   canPlay() {
-    this.shouldPlay();
+    if (this.isPaused()) return;
+    this.play();
   }
 
   action_PLAY_MODE() {
     this.playMode.switch();
   }
 
+  isResourceEmpty() {
+    return this.audio.src === location.href;
+  }
+
   action_PLAY() {
+    if (this.isResourceEmpty()) return;
     this.setPlayState(this.isPaused() ? PLAY_STATE.PLAYING : PLAY_STATE.PAUSED);
     this.play2PauseAnimation.switch();
     this.play();
   }
 
-  /** check if paused manually */
-  shouldPlay() {
-    if (this.isPaused()) return;
-    this.play();
-  }
-
   play() {
     this.audio.paused
-      ? this.audio.play().catch(error => {
-        errorLogger(error);
-      })
+      ? this.audio.play().catch(errorLogger)
       : this.audio.pause();
   }
 
   action_PREVIOUS() {
+    if (this.isResourceEmpty()) return;
     this.audio.pause();
     this.index = this.playMode.getIndex('PREV', this.index, this.listLength);
     this.changeMusic();
   }
 
   action_NEXT() {
+    if (this.isResourceEmpty()) return;
     this.audio.pause();
     this.index = this.playMode.getIndex('NEXT', this.index, this.listLength);
     this.changeMusic();

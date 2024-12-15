@@ -15,6 +15,7 @@ export class MusicBox {
   initAudio() {
     const audio = $<HTMLAudioElement>('#music-audio')!;
     audio.volume = Number($storageGet('volume', '0.5'));
+    audio.src = '';
     audio.autoplay = false;
     audio.addEventListener('error', error => {
       error.message && errorLogger(error);

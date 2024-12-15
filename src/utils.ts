@@ -1,5 +1,11 @@
 import { InfoType } from './info';
 
+export const TAG = '\x1B[43;30m[MusicBox]\x1B[m';
+
+export const isDev = import.meta.env.DEV;
+
+export function NOOP() { }
+
 export function $<T extends HTMLElement>(selectors: string, parent: Document | HTMLElement | T = document): T | null {
   return parent.querySelector(selectors);
 }
@@ -12,9 +18,7 @@ export function $storageSet(key: string, value: string) {
   return localStorage.setItem(`music_box_${key}`, value);
 }
 
-export function errorLogger(...errors: any) {
-  console.error(...errors);
-}
+export const errorLogger = isDev ? (...errors: any) => console.error(`${TAG} `, ...errors) : NOOP;
 
 export function getAttribute(ele: HTMLElement, key: string): string | boolean {
   const value = ele.getAttribute(key);
@@ -110,4 +114,19 @@ export function cleanupBlobUrl(audio: HTMLAudioElement, info: InfoType) {
       URL.revokeObjectURL(url);
     }
   });
+}
+
+export interface Deferred<T> {
+  promise: Promise<T>;
+  resolve: (value: T | PromiseLike<T>) => void;
+  reject: (reason?: any) => void;
+}
+
+export function deferred<T>(): Deferred<T> {
+  const dfd: Deferred<T> = {} as Deferred<T>;
+  dfd.promise = new Promise<T>((rs, rj) => {
+    dfd.resolve = rs;
+    dfd.reject = rj;
+  });
+  return dfd;
 }

@@ -21,7 +21,7 @@ export class PlayProgress extends ProgressBar {
 
   onDragEnd() {
     this.audio.currentTime = this.getCurrentCursorTime();
-    this.musicBox.controls.shouldPlay();
+    this.musicBox.controls.canPlay();
   }
 
   getCurrentCursorTime() {
