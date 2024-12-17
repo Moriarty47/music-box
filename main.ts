@@ -1,15 +1,16 @@
-import '@/styles/index.css';
-
 import { MusicBox } from '@/music-box';
 import { errorLogger } from '@/utils';
-import { InfoType } from '@/info';
+
+import '@/styles/index.css';
+
+import type { InfoType } from '@/info';
 
 fetch('./list.json')
   .then(res => res.json())
-  .then(res => {
+  .then((res) => {
     createMusicBox(res);
   })
-  .catch(error => {
+  .catch((error) => {
     errorLogger(error);
     createMusicBox([]);
   });
@@ -17,8 +18,8 @@ fetch('./list.json')
 function createMusicBox(res: InfoType[]) {
   if (res.length === 0) {
     res.push({
-      title: 'Music Box'
+      title: 'Music Box',
     } as InfoType);
   }
-  new MusicBox(res);
+  return new MusicBox(res);
 }

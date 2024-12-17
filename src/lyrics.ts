@@ -1,6 +1,6 @@
 import { $, errorLogger } from '@/utils';
 
-type LyricLineItem = { time: number; line: string; };
+interface LyricLineItem { time: number; line: string }
 
 export class Lyrics {
   visible: boolean = false;
@@ -72,10 +72,10 @@ function createLyricsDom(lyricLines: LyricLineItem[], lrcList: HTMLUListElement)
 async function parseLyrics(url: string): Promise<LyricLineItem[]> {
   return (await fetchLyrics(url))
     .split('\n')
-    .map(line => {
+    .map((line) => {
       const matched = line.match(/\[(.*)\](.*)/);
       if (matched) {
-        const [m, s, ms] = matched[1].split(/\:|\./);
+        const [m, s, ms] = matched[1].split(/:|\./);
         const time = Number(m) * 60 + Number(s) + Number(ms) / 100;
 
         return {
@@ -85,7 +85,7 @@ async function parseLyrics(url: string): Promise<LyricLineItem[]> {
       }
       return {
         time: 0,
-        line: line,
+        line,
       };
     });
 }
@@ -94,7 +94,7 @@ async function fetchLyrics(url: string) {
   try {
     if (!url) throw new Error('No lyrics found.');
     const response = await fetch(url, {
-      headers: { 'Content-type': 'text/plain' }
+      headers: { 'Content-type': 'text/plain' },
     });
     if (response.status === 200) {
       return response.text();

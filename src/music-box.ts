@@ -1,6 +1,11 @@
-import { InfoType } from '@/info';
 import { Controls } from '@/controls';
-import { $, $storageGet, errorLogger } from '@/utils';
+import {
+  $,
+  $storageGet,
+  errorLogger,
+} from '@/utils';
+
+import type { InfoType } from '@/info';
 
 export class MusicBox {
   list: InfoType[];
@@ -17,7 +22,7 @@ export class MusicBox {
     audio.volume = Number($storageGet('volume', '0.5'));
     audio.src = '';
     audio.autoplay = false;
-    audio.addEventListener('error', error => {
+    audio.addEventListener('error', (error) => {
       error.message && errorLogger(error);
     });
     Object.defineProperty(audio, 'playing', {

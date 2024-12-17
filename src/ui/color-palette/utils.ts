@@ -39,6 +39,6 @@ export function validateOptions(options: {
 
   return {
     colorCount,
-    quality
+    quality,
   };
 }

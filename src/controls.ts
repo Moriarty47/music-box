@@ -1,19 +1,36 @@
-import '@/play-progress';
-import { Info, InfoType } from '@/info';
-import { Lyrics } from '@/lyrics';
-import { Volume } from '@/volume';
-import { MusicBox } from '@/music-box';
-import { PlayMode } from '@/play-mode';
-import { IKeyboard } from '@/keyboard-manager';
 import { Play2PauseAnimation } from '@/animation';
-import { $, debounce, getFilename, getTargetElement, getButtonElement, $storageSet, getFileRecursively, getMediaInfo, errorLogger, isAudioType, normalizeFile, cleanupBlobUrl, deferred } from '@/utils';
+import { Info } from '@/info';
+import { IKeyboard } from '@/keyboard-manager';
+import { Lyrics } from '@/lyrics';
+import { PlayMode } from '@/play-mode';
+import {
+  $,
+  $storageSet,
+  cleanupBlobUrl,
+  debounce,
+  deferred,
+  errorLogger,
+  getButtonElement,
+  getFilename,
+  getFileRecursively,
+  getMediaInfo,
+  getTargetElement,
+  isAudioType,
+  normalizeFile,
+} from '@/utils';
+import { Volume } from '@/volume';
+
+import '@/play-progress';
+
+import type { InfoType } from '@/info';
+import type { MusicBox } from '@/music-box';
 import type { PlayProgress } from '@/play-progress';
 
 type MethodName = {
   [K in keyof Controls]:
   Controls[K] extends (...args: any[]) => any
-  ? K extends `action_${string}` ? K : never
-  : never
+    ? K extends `action_${string}` ? K : never
+    : never
 }[keyof Controls];
 
 enum PLAY_STATE {
@@ -73,7 +90,6 @@ export class Controls {
   }
 
   initAudioListener() {
-
     const updateHandler = () => {
       if (this.progressBar.isSeeking) return;
       this.info.setCurrentTime(this.audio.currentTime);
@@ -131,7 +147,7 @@ export class Controls {
   }
 
   async changeMusic() {
-    cleanupBlobUrl(this.audio, this.info.currentInfo);
+    cleanupBlobUrl(this.info.currentInfo);
 
     const item = this.musicBox.list[this.index];
     const file = item.file;
@@ -193,9 +209,9 @@ export class Controls {
   }
 
   play() {
-    this.audio.paused
-      ? this.audio.play().catch(errorLogger)
-      : this.audio.pause();
+    this.audio.paused ?
+        this.audio.play().catch(errorLogger) :
+        this.audio.pause();
   }
 
   action_PREVIOUS() {
@@ -279,7 +295,7 @@ export class Controls {
     const ele = getTargetElement<HTMLLIElement>(e, 'LI');
     if (!ele) return;
 
-    let index = ele.dataset.index;
+    const index = ele.dataset.index;
     if (index === undefined || index === null) return;
     this.index = Number(index);
 
@@ -287,7 +303,7 @@ export class Controls {
   }
 
   addExtraInfo(extraFiles: File[]) {
-    extraFiles.forEach(file => {
+    extraFiles.forEach((file) => {
       const filename = getFilename(file);
       const songItem = this.musicBox.list.find(item => item.title === filename.name);
       if (!songItem) return;

@@ -1,6 +1,6 @@
-import { Controls } from '@/controls';
+import type { Controls } from '@/controls';
 
-export const enum IKeyboardKey {
+export enum IKeyboardKey {
   SPACE = 'Space',
   LEFT = 'ArrowLeft',
   LEFT2 = 'BracketLeft',
@@ -13,13 +13,12 @@ export const enum IKeyboardKey {
 }
 export class IKeyboard {
   controls: Controls;
-  keys: { [key: string]: boolean; } = {};
+  keys: { [key: string]: boolean } = {};
   constructor(controls: Controls) {
     this.controls = controls;
     this.onKeyup = this.onKeyup.bind(this);
     this.listen();
   }
-
 
   onKeyup(event: KeyboardEvent) {
     event.preventDefault();
@@ -55,7 +54,6 @@ export class IKeyboard {
         break;
     }
   }
-
 
   listen() {
     window.addEventListener('keydown', this.onKeyup);

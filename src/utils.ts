@@ -1,4 +1,4 @@
-import { InfoType } from './info';
+import type { InfoType } from './store/types';
 
 export const TAG = '\x1B[43;30m[MusicBox]\x1B[m';
 
@@ -53,9 +53,15 @@ export function getFilename(file: File) {
   return { name, ext };
 }
 
-export function mapRange(s: number, smin: number, smax: number, tmin: number, tmax: number): number {
+export function mapRange(
+  s: number,
+  smin: number,
+  smax: number,
+  tmin: number,
+  tmax: number,
+): number {
   if (smin === smax) {
-    throw new Error("Invalid range: [a, b] cannot have a zero length.");
+    throw new Error('Invalid range: [a, b] cannot have a zero length.');
   }
   return tmin + ((s - smin) / (smax - smin)) * (tmax - tmin);
 }
@@ -78,7 +84,7 @@ export async function* getFileRecursively<T extends FileSystemDirectoryHandle | 
     }
   } else if (entry.kind === 'directory') {
     for await (const handle of entry.values()) {
-      yield* getFileRecursively(handle as T);
+      yield * getFileRecursively(handle as T);
     }
   }
 }
@@ -108,8 +114,8 @@ export function normalizeFile(info: InfoType, type: 'lrc' | 'cover') {
   return info[type];
 }
 
-export function cleanupBlobUrl(audio: HTMLAudioElement, info: InfoType) {
-  [audio.src, info.lrc, info.cover].forEach(url => {
+export function cleanupBlobUrl(info: InfoType) {
+  [info.src, info.lrc, info.cover].forEach((url) => {
     if (url && url.startsWith('blob://')) {
       URL.revokeObjectURL(url);
     }

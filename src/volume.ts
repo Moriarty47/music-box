@@ -1,6 +1,7 @@
-import { Controls } from '@/controls';
-import { ProgressBar } from '@/progress-bar';
 import { $, mapRange } from '@/utils';
+
+import type { Controls } from '@/controls';
+import type { ProgressBar } from '@/progress-bar';
 
 export class Volume {
   controls: Controls;
@@ -21,16 +22,16 @@ export class Volume {
   }
 
   initPointerListener() {
+    const pointerLeaveHandler = () => {
+      this.#close();
+    };
+
     const pointerEnterHandler = () => {
       this.#open();
       if (!this.tooltip) return;
 
       this.tooltip.addEventListener('pointerenter', pointerEnterHandler, { once: true });
       this.tooltip.addEventListener('pointerleave', pointerLeaveHandler, { once: true });
-    };
-
-    const pointerLeaveHandler = () => {
-      this.#close();
     };
 
     this.button.addEventListener('pointerenter', pointerEnterHandler, false);
@@ -70,7 +71,13 @@ export class Volume {
   }
 
   updateVolume(volume: number) {
-    const vol = mapRange(volume > 100 ? 100 : volume, 0, 100, 0, 1);
+    const vol = mapRange(
+      volume > 100 ? 100 : volume,
+      0,
+      100,
+      0,
+      1,
+    );
     this.audio.volume = vol;
   }
 

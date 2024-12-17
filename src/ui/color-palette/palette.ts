@@ -1,5 +1,8 @@
-import quantize, { Color } from '@lokesh.dhakar/quantize';
+import quantize from '@lokesh.dhakar/quantize';
+
 import { createPixelArray, validateOptions } from './utils';
+
+import type { Color } from '@lokesh.dhakar/quantize';
 
 /*
  * Color Thief v2.6.0
@@ -30,11 +33,22 @@ export class CanvasImage {
     this.ctx = this.canvas.getContext('2d')!;
     this.width = this.canvas.width = image.naturalWidth;
     this.height = this.canvas.height = image.naturalHeight;
-    this.ctx.drawImage(image, 0, 0, this.width, this.height);
+    this.ctx.drawImage(
+      image,
+      0,
+      0,
+      this.width,
+      this.height,
+    );
   }
 
   getImageData() {
-    return this.ctx.getImageData(0, 0, this.width, this.height);
+    return this.ctx.getImageData(
+      0,
+      0,
+      this.width,
+      this.height,
+    );
   }
 }
 
@@ -77,9 +91,9 @@ export class ColorPalette {
       xhr.responseType = 'arraybuffer';
       xhr.onload = () => {
         if (xhr.status === 200) {
-          let uInt8Array = new Uint8Array(xhr.response);
+          const uInt8Array = new Uint8Array(xhr.response);
           const len = uInt8Array.length;
-          const binaryString = Array(len);
+          const binaryString = Array.from({ length: len });
           for (let i = 0; i < len; i += 1) {
             binaryString[i] = String.fromCharCode(uInt8Array[i]);
           }
@@ -91,6 +105,4 @@ export class ColorPalette {
       xhr.send();
     });
   }
-
-
 }

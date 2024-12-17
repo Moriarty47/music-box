@@ -1,5 +1,6 @@
-import { MusicBox } from '@/music-box';
 import { ProgressBar } from '@/progress-bar';
+
+import type { MusicBox } from '@/music-box';
 
 export class PlayProgress extends ProgressBar {
   musicBox!: MusicBox;
@@ -26,14 +27,14 @@ export class PlayProgress extends ProgressBar {
 
   getCurrentCursorTime() {
     const time = this.getCurrentCursorPosition();
-    if (time === 1) return this.audio.duration - .5;
+    if (time === 1) return this.audio.duration - 0.5;
     return time * this.audio.duration;
   }
 
   updateProgress() {
     const current = this.audio.currentTime;
     const duration = this.audio.duration;
-    if (isNaN(current) || isNaN(duration)) return;
+    if (Number.isNaN(current) || Number.isNaN(duration)) return;
     this.setProgress(String((current / duration) * 100));
   }
 }

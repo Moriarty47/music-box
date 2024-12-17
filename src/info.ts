@@ -1,8 +1,9 @@
+import ColorPalette from '@/ui/color-palette';
 import { $, normalizeFile } from '@/utils';
-import { MusicBox } from '@/music-box';
-import ColorPalette from '@/color-palette';
 
-export type InfoType = {
+import type { MusicBox } from '@/music-box';
+
+export interface InfoType {
   title: string;
   album: string;
   artist: string;
@@ -12,7 +13,7 @@ export type InfoType = {
   coverObject?: File;
   lrcObject?: File;
   file?: File;
-};
+}
 
 export class Info {
   musicBox: MusicBox;

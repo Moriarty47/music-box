@@ -1,5 +1,9 @@
-import { $, $storageGet, $storageSet } from '@/utils';
 import { PlayModeAnimation } from '@/animation';
+import {
+  $,
+  $storageGet,
+  $storageSet,
+} from '@/utils';
 
 export enum PLAY_MODE {
   ORDER,
@@ -8,7 +12,7 @@ export enum PLAY_MODE {
 }
 
 const MODE_KEY = 'play_mode';
-const MODE_LENGTH = Object.keys(PLAY_MODE).filter((key) => isNaN(Number(key))).length;
+const MODE_LENGTH = Object.keys(PLAY_MODE).filter(key => Number.isNaN(Number(key))).length;
 
 export class PlayMode {
   mode: PLAY_MODE = PLAY_MODE.ORDER;
