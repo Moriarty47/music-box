@@ -1,3 +1,5 @@
+import plugin from 'tailwindcss/plugin';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -17,9 +19,32 @@ export default {
         middle: 'var(--middle-shadow)',
       },
       borderRadius: {
+        inherit: 'inherit',
         xxl: '0.875rem',
+        xxxl: '0.575rem',
       },
     },
   },
-  plugins: [],
+  plugins: [
+    plugin(({ matchUtilities, theme }) => {
+      matchUtilities({
+        'inset-x': (value) => {
+          if (value.includes(' ')) {
+            const [left, right] = value.split(' ');
+            return { left, right };
+          }
+          return { left: value, right: value };
+        },
+      }, { type: 'position', values: theme('inset-x') });
+      matchUtilities({
+        'inset-y': (value) => {
+          if (value.includes(' ')) {
+            const [top, bottom] = value.split(' ');
+            return { top, bottom };
+          }
+          return { top: value, bottom: value };
+        },
+      }, { type: 'position', values: theme('inset-y') });
+    }),
+  ],
 };

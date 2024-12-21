@@ -3,7 +3,9 @@ import {
   errorLogger,
   getFilename,
   getFileRecursively,
+  getMediaInfo,
   isAudioType,
+  normalizeFile,
 } from '@/utils';
 
 import { PlayMode } from '.';
@@ -24,16 +26,34 @@ const addExtraInfo = (extraFiles: File[], list: InfoType[]) => {
   });
 };
 
+export const getJsonSongs = () => {
+  return fetch('list.json')
+    .then(res => res.json())
+    .then((res: InfoType[]) => {
+      return res.map((item, index) => ({
+        ...item,
+        index,
+        format: getFilename({ name: item.src }).ext,
+      }));
+    });
+};
+
 export const getSongs = async (dirHandle: FileSystemDirectoryHandle, list: InfoType[] = []) => {
   const newList = [...list];
   const extraFiles: File[] = [];
 
+  let index = newList.length;
   for await (const file of getFileRecursively(dirHandle)) {
     if (!isAudioType(file)) {
       extraFiles.push(file);
       continue;
     }
-    newList.push({ title: getFilename(file).name, file } as InfoType);
+    newList.push({
+      index: index++,
+      title: getFilename(file).name,
+      file,
+      format: file.type.split('audio/')[1],
+    } as InfoType);
   }
   addExtraInfo(extraFiles, newList);
 
@@ -52,4 +72,23 @@ export const openDirHandler = async (list: InfoType[]) => {
 export const PlayModeKey = 'play_mode';
 export const getPlayMode = () => {
   return Number($storageGet(PlayModeKey, PlayMode.ORDER));
+};
+
+export const formatInfo = async (song: InfoType) => {
+  const file = song.file;
+  if (file) {
+    song.src = URL.createObjectURL(file);
+
+    if (!song.initMeta) {
+      const { tags = {} } = await getMediaInfo(file) || {};
+      song.title = tags.title || song.title;
+      song.album = tags.album || song.album;
+      song.cover = tags.picture || song.cover;
+      song.artist = tags.artist || song.artist;
+      song.initMeta = true;
+    }
+  }
+
+  normalizeFile(song, 'cover');
+  return song;
 };

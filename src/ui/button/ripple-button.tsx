@@ -1,24 +1,30 @@
 import {
   type Component,
   createSignal,
+  Show,
   splitProps,
 } from 'solid-js';
 import { Dynamic } from 'solid-js/web';
 
 import * as Icons from '@/ui/icons/button-icons';
 
-export type ButtonType =
-  | 'OPEN_DIR'
-  | 'PLAY_MODE'
-  | 'PREVIOUS'
-  | 'PLAY'
-  | 'NEXT'
-  | 'LYRICS'
-  | 'MUTED';
+export enum ButtonType {
+  OPEN_DIR = 'OPEN_DIR',
+  PLAY_MODE = 'PLAY_MODE',
+  PREV = 'PREV',
+  PLAY = 'PLAY',
+  NEXT = 'NEXT',
+  LYRICS = 'LYRICS',
+  MUTED = 'MUTED',
+  HINT = 'HINT',
+}
 
 export interface ButtonProps {
-  type: ButtonType;
   ref?: HTMLButtonElement | ((el: HTMLButtonElement) => void) | undefined;
+  type: ButtonType;
+  title?: string;
+  sizeCls?: string;
+  loading?: boolean;
   onClick?: [(type: ButtonType, e: PointerEvent) => void, ButtonType];
   onPointerEnter?: [(type: ButtonType, e: PointerEvent) => void, ButtonType];
   onPointerLeave?: [(type: ButtonType, e: PointerEvent) => void, ButtonType];
@@ -26,7 +32,7 @@ export interface ButtonProps {
 
 const RippleButton: Component<ButtonProps> = (props) => {
   const [active, setActive] = createSignal(false);
-  const [local, otherProps] = splitProps(props, ['type', 'onClick']);
+  const [local, otherProps] = splitProps(props, ['type', 'sizeCls', 'loading', 'onClick']);
 
   const pointerDownHandler = () => {
     setActive(true);
@@ -42,17 +48,34 @@ const RippleButton: Component<ButtonProps> = (props) => {
     setActive(false);
   };
 
+  const size = () => {
+    return local.sizeCls || 'size-10 min-w-10';
+  };
+
   return (
     <button
-      class="ripple-button relative z-0 inline-flex size-10 min-w-10 items-center justify-center overflow-hidden rounded-full border-0 bg-transparent text-sm font-normal text-white"
-      classList={{ 'size-auto': local.type === 'PLAY', 'active': active() }}
+      class={`ripple-button relative z-0 inline-flex items-center justify-center overflow-hidden rounded-full border-0 bg-transparent text-sm font-normal text-white hover:bg-foreground/10 ${size()}`}
+      classList={{
+        'size-[54px]': local.type === ButtonType.PLAY,
+        'active': active(),
+        'cursor-default pointer-events-none': local.loading,
+      }}
       data-type={local.type}
       {...otherProps}
       onPointerDown={pointerDownHandler}
       onPointerUp={pointerUpHandler}
       onPointerOut={pointerOutHandler}
     >
-      <Dynamic component={Icons[local.type]} />
+      <Show when={local.loading}>
+        <span class="loading absolute inset-0 rounded-full bg-white" />
+      </Show>
+      <span classList={{
+        'opacity-0': local.loading,
+        'opacity-100': !local.loading,
+      }}
+      >
+        <Dynamic component={Icons[local.type]} />
+      </span>
     </button>
   );
 };

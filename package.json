@@ -4,9 +4,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "rsbuild dev",
-    "build": "rsbuild build",
-    "start": "rsbuild preview"
+    "dev": "vite",
+    "build": "vite build",
+    "start": "vite preview"
   },
   "keywords": [
     "n3bula",
@@ -17,18 +17,20 @@
   "license": "MIT",
   "devDependencies": {
     "@n3bula/eslint-config": "^0.0.5",
-    "@rsbuild/core": "^1.1.10",
-    "@rsbuild/plugin-babel": "^1.0.3",
-    "@rsbuild/plugin-solid": "^1.0.4",
+    "@types/howler": "^2.2.12",
+    "@types/html-minifier-terser": "^7.0.2",
     "@types/node": "^22.10.0",
+    "autoprefixer": "^10.4.20",
     "eslint-plugin-solid": "^0.14.5",
     "html-minifier-terser": "^7.2.0",
-    "rsbuild-plugin-tailwindcss": "^0.0.3",
-    "tailwindcss": "^3.4.15",
-    "typescript": "^5.7.2"
+    "tailwindcss": "3.4.17",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3",
+    "vite-plugin-solid": "^2.11.0"
   },
   "dependencies": {
     "@lokesh.dhakar/quantize": "^1.4.0",
+    "howler": "^2.2.4",
     "solid-js": "^1.9.3"
   }
 }

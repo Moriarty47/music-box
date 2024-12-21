@@ -20,5 +20,6 @@ export default useESLintConfig({
     ...commonRules,
     'antfu/top-level-function': 'off',
     'ts/consistent-type-definitions': 'off',
+    'style/function-paren-newline': ['warn', 'multiline-arguments'],
   },
 }), tailwind());
