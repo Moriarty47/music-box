@@ -43,7 +43,7 @@ const defaultSong = {
   index: -1,
   title: 'By Moriarty47',
   artist: 'Music Box',
-  album: 'Powered by SolidJS & Rsbuild',
+  album: 'Powered by SolidJS & Vite',
 } as InfoType;
 
 const [state, setState] = createStore<GlobalState>({
