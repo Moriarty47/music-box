@@ -1,22 +1,8 @@
-import type { Component, ParentComponent } from 'solid-js';
+import { Svg } from './normal';
 
-type IconProps = {
-  size?: number;
-  color?: string;
-};
+import type { Component } from 'solid-js';
 
-const Svg: ParentComponent<IconProps> = (props) => {
-  const sizeProps = () => ({
-    width: props.size ?? 20,
-    height: props.size ?? 20,
-  });
-
-  return (
-    <svg viewBox="0 0 72 72" fill={props.color || 'currentColor'} {...sizeProps()}>
-      {props.children}
-    </svg>
-  );
-};
+import type { IconProps } from './normal';
 
 export const Command: Component<IconProps> = props => (
   <Svg {...props}>

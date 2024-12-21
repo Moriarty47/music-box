@@ -13,6 +13,8 @@ export default {
         'foreground': 'hsl(var(--foreground) / <alpha-value>)',
         'foreground-track': 'hsl(var(--foreground-track) / <alpha-value>)',
         'background': 'hsl(var(--background) / <alpha-value>)',
+        'lightgreen': 'hsl(var(--lightgreen) / <alpha-value>)',
+        'lightblue': 'hsl(var(--lightblue) / <alpha-value>)',
       },
       boxShadow: {
         offset: 'var(--offset-shadow)',

@@ -1,6 +1,7 @@
 import Box from '@/box-wrapper';
 import Keyboard from '@/keyboard';
 import { useStore } from '@/store';
+import Footer from '@/ui/footer';
 import Hint from '@/ui/hint';
 import Tooltip from '@/ui/tooltip';
 
@@ -19,6 +20,7 @@ const App: Component = () => {
     >
       <Box />
     </div>,
+    <Footer />,
     <Tooltip />,
     <Hint />,
     <Keyboard />,
